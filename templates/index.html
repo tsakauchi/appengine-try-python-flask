@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <header class="row">
+        <h1 class="header-title">{{text}}</h1>
+    </header>
+    
+    <hr>
+    
+    <div class="row row-bottom-spaced">
+        <button type="button" class="btn btn-block btn-primary">Add new article</button>
+    </div>
+    
+    {% for article in articles %}
+    <article class="row row-bottom-spaced article-container">
+        <h1 class="article-title">{{article.title}}</h1>
+        <p>Posted: {{article.date_time_created}}</p>
+        <p>Last Updated: {{article.date_time_last_edited}}</p>
+        <p>{{article.body}}</p>
+    </article>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -2,7 +2,19 @@ body {
     font-family: 'Noto Sans', sans-serif;
 }
 
-h1 {
-    color: crimson;
+.header-title {
     font-weight: bold;
+}
+
+.article-title {
+    margin-top: 0px;
+}
+
+.article-container {
+    padding: 20px;
+    background-color: SeaShell;
+}
+
+.row-bottom-spaced {
+    margin-bottom: 10px;
 }
