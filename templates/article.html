@@ -3,29 +3,31 @@
 <div class="container">
     <header class="row">
         <h1 class="header-title">{{title}}</h1>
+        {% if account %}
         <p>Logged in as {{account.name}}</p>
+        {% endif %}
     </header>
     
     <hr>
     
-    <article id="article-{{article.key.urlsafe()}}" class="row row-bottom-spaced article-container">
+    <article id="article-{{article.key.id()}}" class="row row-bottom-spaced article-container">
         <h1 class="article-title">{{article.title}}</h1>
         <p>Posted: {{article.date_time_created}}</p>
         <p>Last Updated: {{article.date_time_last_edited}}</p>
         <p>{{article.body}}</p>
-        <form method="POST" action="{{url_for('article_delete', article_key_urlsafe=article.key.urlsafe())}}">
+        <form method="POST" action="{{url_for('article_delete', account_id=article.key.parent().id(), article_id=article.key.id())}}">
             <button type="submit" class="btn btn-primary">Delete</button>
         </form>
-        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.urlsafe()}}' ).toggle(); $( '#article-{{article.key.urlsafe()}}' ).toggle();">Edit</button>
+        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Edit</button>
     </article>
     
-    <div id="div-edit-article-{{article.key.urlsafe()}}" class="row row-bottom-spaced article-container" style="display:none;">
-        <form method="POST" action="{{url_for('article_edit', article_key_urlsafe=article.key.urlsafe())}}">
+    <div id="div-edit-article-{{article.key.id()}}" class="row row-bottom-spaced article-container" style="display:none;">
+        <form method="POST" action="{{url_for('article_edit', account_id=article.key.parent().id(), article_id=article.key.id())}}">
             <p><input class="form-control" type="text" name="title" value="{{article.title}}"></input></p>
             <p><textarea class="form-control" name="body">{{article.body}}</textarea></p>
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
-        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.urlsafe()}}' ).toggle(); $( '#article-{{article.key.urlsafe()}}' ).toggle();">Cancel</button>
+        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Cancel</button>
     </div>
 </div>
 {% endblock %}

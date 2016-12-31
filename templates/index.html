@@ -3,7 +3,9 @@
 <div class="container">
     <header class="row">
         <h1 class="header-title">{{title}}</h1>
+        {% if account %}
         <p>Logged in as {{account.name}}</p>
+        {% endif %}
     </header>
     
     <hr>
@@ -13,7 +15,7 @@
     </div>
     
     <div id="div-new-article" class="row row-bottom-spaced" style="display:none;">
-        <form method="POST" action="{{url_for('article_create')}}">
+        <form method="POST" action="{{url_for('article_create', account_id=account.key.id())}}">
             <div class="form-group">
                 <label for="title">Title</label>
                 <input class="form-control" type="text" name="title">
@@ -27,24 +29,24 @@
     </div>
     
     {% for article in articles %}
-    <article id="article-{{article.key.urlsafe()}}" class="row row-bottom-spaced article-container">
-        <h1 class="article-title"><a href="{{url_for('article_view', article_key_urlsafe=article.key.urlsafe())}}">{{article.title}}</a></h1>
+    <article id="article-{{article.key.id()}}" class="row row-bottom-spaced article-container">
+        <h1 class="article-title"><a href="{{url_for('article_view', account_id=article.key.parent().id(), article_id=article.key.id())}}">{{article.title}}</a></h1>
         <p>Posted: {{article.date_time_created}}</p>
         <p>Last Updated: {{article.date_time_last_edited}}</p>
         <p>{{article.body}}</p>
-        <form method="POST" action="{{url_for('article_delete', article_key_urlsafe=article.key.urlsafe())}}">
+        <form method="POST" action="{{url_for('article_delete', account_id=article.key.parent().id(), article_id=article.key.id())}}">
             <button type="submit" class="btn btn-primary">Delete</button>
         </form>
-        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.urlsafe()}}' ).toggle(); $( '#article-{{article.key.urlsafe()}}' ).toggle();">Edit</button>
+        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Edit</button>
     </article>
     
-    <div id="div-edit-article-{{article.key.urlsafe()}}" class="row row-bottom-spaced article-container" style="display:none;">
-        <form method="POST" action="{{url_for('article_edit', article_key_urlsafe=article.key.urlsafe())}}">
+    <div id="div-edit-article-{{article.key.id()}}" class="row row-bottom-spaced article-container" style="display:none;">
+        <form method="POST" action="{{url_for('article_edit', account_id=article.key.parent().id(), article_id=article.key.id())}}">
             <p><input class="form-control" type="text" name="title" value="{{article.title}}"></input></p>
             <p><textarea class="form-control" name="body">{{article.body}}</textarea></p>
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
-        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.urlsafe()}}' ).toggle(); $( '#article-{{article.key.urlsafe()}}' ).toggle();">Cancel</button>
+        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Cancel</button>
     </div>
     {% endfor %}
 </div>

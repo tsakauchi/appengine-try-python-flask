@@ -39,10 +39,15 @@ def index():
     return render_template("index.html", title="Hello, world!", account=account, articles=articles)
 
 
-@app.route('/article/create', methods=['POST'])
-def article_create():
-    account = _main._getCurrentAccount()
-    account_key = account.key
+@app.route('/blog/<int:account_id>/article/create', methods=['POST'])
+def article_create(account_id):
+    account_key = ndb.Key(Account, account_id)
+
+    cur_account = _main._getCurrentAccount()
+    cur_account_key = cur_account.key
+
+    if account_key != cur_account_key:
+        return 'You can only create a new article under your account'
 
     new_article = Article(
         parent=account_key,
@@ -54,23 +59,21 @@ def article_create():
     return redirect(url_for('index'))
 
 
-@app.route('/article/<string:article_key_urlsafe>')
-def article_view(article_key_urlsafe):
-    article_key = ndb.Key(urlsafe=article_key_urlsafe)
+@app.route('/blog/<int:account_id>/article/<int:article_id>')
+def article_view(account_id, article_id):
+    article_key = ndb.Key(Account, account_id, Article, article_id)
     if not article_key:
         return 'invalid key'
     article = article_key.get()
 
     account = _main._getCurrentAccount()
-    if not account:
-        return 'not logged in'
 
     return render_template("article.html", title="Hello, world!", account=account, article=article)
 
 
-@app.route('/article/<string:article_key_urlsafe>/edit', methods=['POST'])
-def article_edit(article_key_urlsafe):
-    article_key = ndb.Key(urlsafe=article_key_urlsafe)
+@app.route('/blog/<int:account_id>/article/<int:article_id>/edit', methods=['POST'])
+def article_edit(account_id, article_id):
+    article_key = ndb.Key(Account, account_id, Article, article_id)
     if not article_key:
         return 'invalid key'
 
@@ -81,7 +84,9 @@ def article_edit(article_key_urlsafe):
     account_key = account.key
 
     if article_key.parent() != account_key:
-        return "cannot edit another person's post"
+        artid = article_key.parent().id()
+        actid = account_key.id()
+        return "cannot edit another person's post %d / %d" % (article_key.parent().id(), account_key.id())
 
     article = article_key.get()
     article.title = request.form['title']
@@ -92,9 +97,9 @@ def article_edit(article_key_urlsafe):
     return redirect(url_for('index'))
 
 
-@app.route('/article/<string:article_key_urlsafe>/delete', methods=['POST'])
-def article_delete(article_key_urlsafe):
-    article_key = ndb.Key(urlsafe=article_key_urlsafe)
+@app.route('/blog/<int:account_id>/article/<int:article_id>/delete', methods=['POST'])
+def article_delete(account_id, article_id):
+    article_key = ndb.Key(Account, account_id, Article, article_id)
     if not article_key:
         return 'invalid key'
 
