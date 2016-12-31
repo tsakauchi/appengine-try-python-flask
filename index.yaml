@@ -24,6 +24,12 @@ indexes:
 - kind: Article
   ancestor: yes
   properties:
+  - name: date_time_created
+    direction: desc
+
+- kind: Article
+  ancestor: yes
+  properties:
   - name: date_time_last_edited
 
 - kind: Article

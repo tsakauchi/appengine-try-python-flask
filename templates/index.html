@@ -8,7 +8,7 @@
     <hr>
     
     <div class="row row-bottom-spaced">
-        <button id="button-show-div-new-article" type="button" class="btn btn-block btn-primary">Add new article</button>
+        <button class="btn btn-block btn-primary" onclick="$( '#div-new-article' ).toggle();">Add new article</button>
     </div>
     
     <div id="div-new-article" class="row row-bottom-spaced" style="display:none;">
@@ -26,7 +26,7 @@
     </div>
     
     {% for article in articles %}
-    <article class="row row-bottom-spaced article-container">
+    <article id="article-{{article.key.urlsafe()}}" class="row row-bottom-spaced article-container">
         <h1 class="article-title">{{article.title}}</h1>
         <p>Posted: {{article.date_time_created}}</p>
         <p>Last Updated: {{article.date_time_last_edited}}</p>
@@ -34,16 +34,17 @@
         <form method="POST" action="{{url_for('article_delete', article_key_urlsafe=article.key.urlsafe())}}">
             <button type="submit" class="btn btn-primary">Delete</button>
         </form>
+        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.urlsafe()}}' ).toggle(); $( '#article-{{article.key.urlsafe()}}' ).toggle();">Edit</button>
     </article>
+    
+    <div id="div-edit-article-{{article.key.urlsafe()}}" class="row row-bottom-spaced article-container" style="display:none;">
+        <form method="POST" action="{{url_for('article_edit', article_key_urlsafe=article.key.urlsafe())}}">
+            <p><input class="form-control" type="text" name="title" value="{{article.title}}"></input></p>
+            <p><textarea class="form-control" name="body">{{article.body}}</textarea></p>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.urlsafe()}}' ).toggle(); $( '#article-{{article.key.urlsafe()}}' ).toggle();">Cancel</button>
+    </div>
     {% endfor %}
 </div>
-
-<script>
-$(document).ready(function() {
-  $( "#button-show-div-new-article" ).click(function() {
-    $( "#div-new-article" ).toggle();
-  });
-});
-</script>
-
 {% endblock %}
