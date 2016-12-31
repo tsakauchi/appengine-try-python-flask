@@ -12,5 +12,5 @@ class Article(ndb.Model):
     """Article entity - represents blog article"""
     title = ndb.StringProperty(required=True)
     body = ndb.StringProperty()
-    date_time_created = ndb.DateTimeProperty(required=True)
-    date_time_last_edited = ndb.DateTimeProperty(required=True)
+    date_time_created = ndb.DateTimeProperty(auto_now_add=True)
+    date_time_last_edited = ndb.DateTimeProperty(auto_now=True)

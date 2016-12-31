@@ -30,9 +30,7 @@ def index():
         newArticle = Article(
             parent=account_key,
             title="My Post #%d" % len(articles),
-            body="Lorel ipsum!",
-            date_time_created=datetime.now(),
-            date_time_last_edited=datetime.now())
+            body="Lorel ipsum!")
         newArticle.put()
         articles.insert(0,newArticle)
 
@@ -52,9 +50,7 @@ def article_create(account_id):
     new_article = Article(
         parent=account_key,
         title=request.form['title'],
-        body=request.form['body'],
-        date_time_created=datetime.now(),
-        date_time_last_edited=datetime.now())
+        body=request.form['body'])
     new_article.put()
     return redirect(url_for('index'))
 
