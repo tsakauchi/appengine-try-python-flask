@@ -36,7 +36,7 @@ def index():
         newArticle.put()
         articles.insert(0,newArticle)
 
-    return render_template("index.html", title="Hello, world!", text="Hello, world!!", articles=articles)
+    return render_template("index.html", title="Hello, world!", account=account, articles=articles)
 
 
 @app.route('/article/create', methods=['POST'])
