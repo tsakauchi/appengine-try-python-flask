@@ -20,3 +20,8 @@ indexes:
   - name: account_key
   - name: date_time_last_edited
     direction: desc
+
+- kind: Article
+  ancestor: yes
+  properties:
+  - name: date_time_last_edited

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
 
 from google.appengine.ext import ndb
 
@@ -31,22 +31,33 @@ def index():
 
     articles = []
 
-    q = Article.query()
-    q = q.filter(Article.account_key == account_key)
+    q = Article.query(ancestor=account_key)
     q = q.order(Article.date_time_last_edited)
     articles = q.fetch()
 
     if len(articles) < 10:
         newArticle = Article(
+            parent=account_key,
             title="My Post #%d" % len(articles),
             body="Lorel ipsum!",
             date_time_created=datetime.now(),
-            date_time_last_edited=datetime.now(),
-            account_key=account_key)
+            date_time_last_edited=datetime.now())
         newArticle.put()
         articles.append(newArticle)
 
     return render_template("index.html", title="Hello, world!", text="Hello, world!!", articles=articles)
+
+
+@app.route('/article/<string:article_key_urlsafe>/delete', methods=['POST'])
+def article_delete(article_key_urlsafe):
+    print(article_key_urlsafe)
+    article_key = ndb.Key(urlsafe=article_key_urlsafe)
+    if request.method == 'POST':
+        if article_key:
+            article_key.delete()
+        return redirect(url_for('index'))
+    else:
+        return "unsupported method", 405
 
 
 @app.route('/hello')

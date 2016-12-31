@@ -17,6 +17,9 @@
         <p>Posted: {{article.date_time_created}}</p>
         <p>Last Updated: {{article.date_time_last_edited}}</p>
         <p>{{article.body}}</p>
+        <form method="POST" action="{{url_for('article_delete', article_key_urlsafe=article.key.urlsafe())}}">
+            <input type="submit" value="Delete">
+        </form>
     </article>
     {% endfor %}
 </div>

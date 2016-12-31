@@ -14,4 +14,3 @@ class Article(ndb.Model):
     body = ndb.StringProperty()
     date_time_created = ndb.DateTimeProperty(required=True)
     date_time_last_edited = ndb.DateTimeProperty(required=True)
-    account_key = ndb.KeyProperty(required=True, kind=Account)
