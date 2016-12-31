@@ -54,6 +54,20 @@ def article_create():
     return redirect(url_for('index'))
 
 
+@app.route('/article/<string:article_key_urlsafe>')
+def article_view(article_key_urlsafe):
+    article_key = ndb.Key(urlsafe=article_key_urlsafe)
+    if not article_key:
+        return 'invalid key'
+    article = article_key.get()
+
+    account = _main._getCurrentAccount()
+    if not account:
+        return 'not logged in'
+
+    return render_template("article.html", title="Hello, world!", account=account, article=article)
+
+
 @app.route('/article/<string:article_key_urlsafe>/edit', methods=['POST'])
 def article_edit(article_key_urlsafe):
     article_key = ndb.Key(urlsafe=article_key_urlsafe)

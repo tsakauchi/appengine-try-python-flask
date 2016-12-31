@@ -8,27 +8,8 @@
     
     <hr>
     
-    <div class="row row-bottom-spaced">
-        <button class="btn btn-block btn-primary" onclick="$( '#div-new-article' ).toggle();">Add new article</button>
-    </div>
-    
-    <div id="div-new-article" class="row row-bottom-spaced" style="display:none;">
-        <form method="POST" action="{{url_for('article_create')}}">
-            <div class="form-group">
-                <label for="title">Title</label>
-                <input class="form-control" type="text" name="title">
-            </div>
-            <div class="form-group">
-                <label for="body">Body</label>
-                <textarea class="form-control" name="body"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-    </div>
-    
-    {% for article in articles %}
     <article id="article-{{article.key.urlsafe()}}" class="row row-bottom-spaced article-container">
-        <h1 class="article-title"><a href="{{url_for('article_view', article_key_urlsafe=article.key.urlsafe())}}">{{article.title}}</a></h1>
+        <h1 class="article-title">{{article.title}}</h1>
         <p>Posted: {{article.date_time_created}}</p>
         <p>Last Updated: {{article.date_time_last_edited}}</p>
         <p>{{article.body}}</p>
@@ -46,6 +27,5 @@
         </form>
         <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.urlsafe()}}' ).toggle(); $( '#article-{{article.key.urlsafe()}}' ).toggle();">Cancel</button>
     </div>
-    {% endfor %}
 </div>
 {% endblock %}
