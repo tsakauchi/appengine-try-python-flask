@@ -6,6 +6,8 @@ from google.appengine.ext import ndb
 
 from models import Account, Article
 
+import _main
+
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
@@ -16,23 +18,12 @@ app.config['DEBUG'] = True
 @app.route('/')
 def index():
     """Post new article using a default account each time a page is visited. Stop when article count reaches 10."""
-    q = Account.query()
-    q = q.filter(Account.name == "Dev Blog")
-    account = q.get()
-
-    if account:
-        account_key = account.key
-    else:
-        account = Account(
-            name="Dev Blog",
-            password="dev",
-            email="dev@blog.com")
-        account_key = account.put()
+    account = _main._getCurrentAccount()
+    account_key = account.key
 
     articles = []
-
     q = Article.query(ancestor=account_key)
-    q = q.order(Article.date_time_last_edited)
+    q = q.order(-Article.date_time_last_edited)
     articles = q.fetch()
 
     if len(articles) < 10:
@@ -43,21 +34,32 @@ def index():
             date_time_created=datetime.now(),
             date_time_last_edited=datetime.now())
         newArticle.put()
-        articles.append(newArticle)
+        articles.insert(0,newArticle)
 
     return render_template("index.html", title="Hello, world!", text="Hello, world!!", articles=articles)
 
 
+@app.route('/article/create', methods=['POST'])
+def article_create():
+    account = _main._getCurrentAccount()
+    account_key = account.key
+
+    new_article = Article(
+        parent=account_key,
+        title=request.form['title'],
+        body=request.form['body'],
+        date_time_created=datetime.now(),
+        date_time_last_edited=datetime.now())
+    new_article.put()
+    return redirect(url_for('index'))
+
+
 @app.route('/article/<string:article_key_urlsafe>/delete', methods=['POST'])
 def article_delete(article_key_urlsafe):
-    print(article_key_urlsafe)
     article_key = ndb.Key(urlsafe=article_key_urlsafe)
-    if request.method == 'POST':
-        if article_key:
-            article_key.delete()
-        return redirect(url_for('index'))
-    else:
-        return "unsupported method", 405
+    if article_key:
+        article_key.delete()
+    return redirect(url_for('index'))
 
 
 @app.route('/hello')

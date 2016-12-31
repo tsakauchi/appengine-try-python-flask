@@ -8,7 +8,21 @@
     <hr>
     
     <div class="row row-bottom-spaced">
-        <button type="button" class="btn btn-block btn-primary">Add new article</button>
+        <button id="button-show-div-new-article" type="button" class="btn btn-block btn-primary">Add new article</button>
+    </div>
+    
+    <div id="div-new-article" class="row row-bottom-spaced" style="display:none;">
+        <form method="POST" action="{{url_for('article_create')}}">
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input class="form-control" type="text" name="title">
+            </div>
+            <div class="form-group">
+                <label for="body">Body</label>
+                <textarea class="form-control" name="body"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
     </div>
     
     {% for article in articles %}
@@ -18,9 +32,18 @@
         <p>Last Updated: {{article.date_time_last_edited}}</p>
         <p>{{article.body}}</p>
         <form method="POST" action="{{url_for('article_delete', article_key_urlsafe=article.key.urlsafe())}}">
-            <input type="submit" value="Delete">
+            <button type="submit" class="btn btn-primary">Delete</button>
         </form>
     </article>
     {% endfor %}
 </div>
+
+<script>
+$(document).ready(function() {
+  $( "#button-show-div-new-article" ).click(function() {
+    $( "#div-new-article" ).toggle();
+  });
+});
+</script>
+
 {% endblock %}
