@@ -13,21 +13,6 @@ import hashlib
 
 HMAC_SECRET = "Attention all aircraft, this is Comona base. This rocket launch is critical. Maintain air superiority until the launch is complete."
 
-def _getCurrentAccount():
-    """Get account entity of the account that is currently logged in"""
-    q = Account.query()
-    q = q.filter(Account.email == "dev@blog.com")
-    account = q.get()
-
-    if not account:
-        account = Account(
-            name="Dev Blog",
-            password="dev",
-            email="dev@blog.com")
-        account.put()
-
-    return account
-
 def _get_current_account(request):
     account_id_secure = request.cookies.get('account_id')
     if account_id_secure:

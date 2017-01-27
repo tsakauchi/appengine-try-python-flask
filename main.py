@@ -41,15 +41,17 @@ def account_login():
         username = request.form['username']
         password = request.form['password']
 
+        username_lower = username.lower()
+
         q = Account.query()
-        q = q.filter(Account.name ==username)
+        q = q.filter(Account.username_lower==username_lower)
         account = q.get()
 
         if not account:
             # invalid account name
             return render_template("login.html", title="Hello, world! (invalid act)")
 
-        if not _main._is_hashed_password_valid(username, password, account.password):
+        if not _main._is_hashed_password_valid(username_lower, password, account.password):
             # invalid account password
             return render_template("login.html", title="Hello, world! (invalid pwd)")
 
@@ -61,8 +63,9 @@ def account_login():
 @app.route('/blog/create', methods=['POST'])
 def account_create():
     new_account = Account(
-        name=request.form['name'],
-        password=_main._get_hashed_password(request.form['name'], request.form['password']),
+        username=request.form['username'],
+        dispname=request.form['dispname'],
+        password=_main._get_hashed_password(request.form['username'].lower(), request.form['password']),
         email=request.form['email']
     )
     new_account.put()
@@ -71,69 +74,87 @@ def account_create():
     return response
 
 
-@app.route('/blog/<int:account_id>')
-def account_view(account_id):
+@app.route('/blog/<username>')
+def account_view(username):
     """Display articles using current account"""
-    account_key = ndb.Key(Account, account_id)
-    account = account_key.get()
+    username_lower = username.lower()
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
 
-    if account_key:
-        q = Article.query(ancestor=account_key)
-    else:
-        q = Article.query()
+    if not account:
+        return 'invalid account'
 
+    q = Article.query(ancestor=account.key)
     q = q.order(-Article.date_time_created)
     articles = q.fetch()
 
     return render_template("index.html", title="Hello, world!", account=account, articles=articles)
 
 
-@app.route('/blog/<int:account_id>/article/create', methods=['POST'])
-def article_create(account_id):
-    account_key = ndb.Key(Account, account_id)
+@app.route('/blog/<username>/article/create', methods=['POST'])
+def article_create(username):
+    username_lower = username.lower()
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
+
+    if not account:
+        return 'invalid account'
 
     cur_account = _main._get_current_account(request)
-    cur_account_key = cur_account.key
 
-    if account_key != cur_account_key:
+    if account.key != cur_account.key:
         return 'You can only create a new article under your account'
 
     new_article = Article(
-        parent=account_key,
+        parent=account.key,
         title=request.form['title'],
         body=request.form['body'])
     new_article.put()
-    return redirect(url_for('index'))
+
+    #return redirect(url_for('index'))
+    return redirect(url_for('account_view', username=username_lower))
 
 
-@app.route('/blog/<int:account_id>/article/<int:article_id>')
-def article_view(account_id, article_id):
-    article_key = ndb.Key(Account, account_id, Article, article_id)
+@app.route('/blog/<username>/article/<int:article_id>')
+def article_view(username, article_id):
+    username_lower = username.lower()
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
+
+    if not account:
+        return 'invalid account'
+
+    article_key = ndb.Key(Account, account.key.id(), Article, article_id)
     if not article_key:
         return 'invalid key'
     article = article_key.get()
 
-    account = _main._get_current_account(request)
+    cur_account = _main._get_current_account(request)
 
-    return render_template("article.html", title="Hello, world!", account=account, article=article)
+    return render_template("article.html", title="Hello, world!", account=cur_account, article=article)
 
 
-@app.route('/blog/<int:account_id>/article/<int:article_id>/edit', methods=['POST'])
-def article_edit(account_id, article_id):
-    article_key = ndb.Key(Account, account_id, Article, article_id)
+@app.route('/blog/<username>/article/<int:article_id>/edit', methods=['POST'])
+def article_edit(username, article_id):
+    username_lower = username.lower()
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
+
+    if not account:
+        return 'invalid account'
+
+    article_key = ndb.Key(Account, account.key.id(), Article, article_id)
     if not article_key:
         return 'invalid key'
 
-    account = _main._get_current_account(request)
-    if not account:
+    cur_account = _main._get_current_account(request)
+    if not cur_account:
         return 'not logged in'
 
-    account_key = account.key
-
-    if article_key.parent() != account_key:
+    if article_key.parent() != cur_account.key:
         artid = article_key.parent().id()
-        actid = account_key.id()
-        return "cannot edit another person's post %d / %d" % (article_key.parent().id(), account_key.id())
+        curid = cur_account.key.id()
+        return "cannot edit another person's post %d / %d" % (artid, curid)
 
     article = article_key.get()
     article.title = request.form['title']
@@ -141,27 +162,37 @@ def article_edit(account_id, article_id):
     article.date_time_last_edited = datetime.now()
     article.put()
 
-    return redirect(url_for('index'))
+    #return redirect(url_for('index'))
+    return redirect(url_for('account_view', username=username_lower))
 
 
-@app.route('/blog/<int:account_id>/article/<int:article_id>/delete', methods=['POST'])
-def article_delete(account_id, article_id):
-    article_key = ndb.Key(Account, account_id, Article, article_id)
+@app.route('/blog/<username>/article/<int:article_id>/delete', methods=['POST'])
+def article_delete(username, article_id):
+    username_lower = username.lower()
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
+
+    if not account:
+        return 'invalid account'
+
+    article_key = ndb.Key(Account, account.key.id(), Article, article_id)
     if not article_key:
         return 'invalid key'
 
-    account = _main._get_current_account(request)
-    if not account:
+    cur_account = _main._get_current_account(request)
+    if not cur_account:
         return 'not logged in'
 
-    account_key = account.key
-
-    if article_key.parent() != account_key:
-        return "cannot delete another person's post"
+    if article_key.parent() != cur_account.key:
+        artid = article_key.parent().id()
+        curid = cur_account.key.id()
+        return "cannot edit another person's post %d / %d" % (artid, curid)
 
     if article_key:
         article_key.delete()
-    return redirect(url_for('index'))
+
+    #return redirect(url_for('index'))
+    return redirect(url_for('account_view', username=username_lower))
 
 
 @app.route('/hello')
