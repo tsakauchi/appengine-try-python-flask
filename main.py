@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, make_response
 
 from google.appengine.ext import ndb
 
@@ -10,29 +10,80 @@ import _main
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+uid = ""
 
 # Note: We don't need to call run() since our application is embedded within
 # the App Engine WSGI application server.
 
 
-@app.route('/')
+@app.route('/blog')
 def index():
-    """Post new article using a default account each time a page is visited. Stop when article count reaches 10."""
-    account = _main._getCurrentAccount()
-    account_key = account.key
+    """Display all articles from all users"""
+    account = _main._get_current_account(request)
 
-    articles = []
-    q = Article.query(ancestor=account_key)
+    q = Article.query()
     q = q.order(-Article.date_time_created)
     articles = q.fetch()
 
-    if len(articles) < 10:
-        newArticle = Article(
-            parent=account_key,
-            title="My Post #%d" % len(articles),
-            body="Lorel ipsum!")
-        newArticle.put()
-        articles.insert(0,newArticle)
+    return render_template("index.html", title="Hello, world!", account=account, articles=articles)
+
+
+@app.route('/blog/signup')
+def account_signup():
+    return render_template("signup.html", title="Hello, world!")
+
+
+@app.route('/blog/login', methods=['GET','POST'])
+def account_login():
+    if request.method == 'GET':
+        return render_template("login.html", title="Hello, world!")
+    else:
+        username = request.form['username']
+        password = request.form['password']
+
+        q = Account.query()
+        q = q.filter(Account.name ==username)
+        account = q.get()
+
+        if not account:
+            # invalid account name
+            return render_template("login.html", title="Hello, world! (invalid act)")
+
+        if not _main._is_hashed_password_valid(username, password, account.password):
+            # invalid account password
+            return render_template("login.html", title="Hello, world! (invalid pwd)")
+
+        response = make_response(redirect(url_for('index')))
+        _main._login(response, account)
+        return response
+
+
+@app.route('/blog/create', methods=['POST'])
+def account_create():
+    new_account = Account(
+        name=request.form['name'],
+        password=_main._get_hashed_password(request.form['name'], request.form['password']),
+        email=request.form['email']
+    )
+    new_account.put()
+    response = make_response(redirect(url_for('index')))
+    _main._login(response, new_account)
+    return response
+
+
+@app.route('/blog/<int:account_id>')
+def account_view(account_id):
+    """Display articles using current account"""
+    account_key = ndb.Key(Account, account_id)
+    account = account_key.get()
+
+    if account_key:
+        q = Article.query(ancestor=account_key)
+    else:
+        q = Article.query()
+
+    q = q.order(-Article.date_time_created)
+    articles = q.fetch()
 
     return render_template("index.html", title="Hello, world!", account=account, articles=articles)
 
@@ -41,7 +92,7 @@ def index():
 def article_create(account_id):
     account_key = ndb.Key(Account, account_id)
 
-    cur_account = _main._getCurrentAccount()
+    cur_account = _main._get_current_account(request)
     cur_account_key = cur_account.key
 
     if account_key != cur_account_key:
@@ -62,7 +113,7 @@ def article_view(account_id, article_id):
         return 'invalid key'
     article = article_key.get()
 
-    account = _main._getCurrentAccount()
+    account = _main._get_current_account(request)
 
     return render_template("article.html", title="Hello, world!", account=account, article=article)
 
@@ -73,7 +124,7 @@ def article_edit(account_id, article_id):
     if not article_key:
         return 'invalid key'
 
-    account = _main._getCurrentAccount()
+    account = _main._get_current_account(request)
     if not account:
         return 'not logged in'
 
@@ -99,7 +150,7 @@ def article_delete(account_id, article_id):
     if not article_key:
         return 'invalid key'
 
-    account = _main._getCurrentAccount()
+    account = _main._get_current_account(request)
     if not account:
         return 'not logged in'
 

@@ -15,12 +15,18 @@
         <p>Posted: {{article.date_time_created}}</p>
         <p>Last Updated: {{article.date_time_last_edited}}</p>
         <p>{{article.body}}</p>
+        {% if account %}
+        {% if account.key.id() == article.key.parent().id() %}
         <form method="POST" action="{{url_for('article_delete', account_id=article.key.parent().id(), article_id=article.key.id())}}">
             <button type="submit" class="btn btn-primary">Delete</button>
         </form>
         <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Edit</button>
+        {% endif %}
+        {% endif %}
     </article>
     
+    {% if account %}
+    {% if account.key.id() == article.key.parent().id() %}
     <div id="div-edit-article-{{article.key.id()}}" class="row row-bottom-spaced article-container" style="display:none;">
         <form method="POST" action="{{url_for('article_edit', account_id=article.key.parent().id(), article_id=article.key.id())}}">
             <p><input class="form-control" type="text" name="title" value="{{article.title}}"></input></p>
@@ -29,5 +35,7 @@
         </form>
         <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Cancel</button>
     </div>
+    {% endif %}
+    {% endif %}
 </div>
 {% endblock %}
