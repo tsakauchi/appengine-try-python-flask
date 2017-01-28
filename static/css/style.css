@@ -14,6 +14,10 @@ body {
     margin-top: 0px;
 }
 
+.article-author {
+    font-weight: bold;
+}
+
 .article-container {
     padding: 20px;
     background-color: SeaShell;
