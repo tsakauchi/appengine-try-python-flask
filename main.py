@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, make_respo
 
 from google.appengine.ext import ndb
 
-from models import Account, Article
+from models import Account, Article, Like
 
 import _main
 
@@ -217,6 +217,41 @@ def article_delete(username, article_id):
         article_key.delete()
 
     #return redirect(url_for('index'))
+    return redirect(url_for('account_view', username=username_lower))
+
+
+@app.route('/blog/<username>/article/<int:article_id>/like', methods=['POST'])
+def article_like(username, article_id):
+    username_lower = username.lower()
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
+
+    if not account:
+        return 'invalid account'
+
+    article_key = ndb.Key(Account, account.key.id(), Article, article_id)
+    if not article_key:
+        return 'invalid key'
+
+    cur_account = _main._get_current_account(request)
+    if not cur_account:
+        return 'not logged in'
+
+    if article_key.parent() == cur_account.key:
+        return "cannot like your own post"
+
+    q = Like.query(ancestor=article_key)
+    q = q.filter(Like.account_key==cur_account.key)
+    like = q.get()
+
+    if like:
+        like.key.delete()
+    else:
+        new_like = Like(
+            parent=article_key,
+            account_key=cur_account.key)
+        new_like.put()
+
     return redirect(url_for('account_view', username=username_lower))
 
 
