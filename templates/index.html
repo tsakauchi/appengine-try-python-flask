@@ -29,15 +29,28 @@
     <div id="div-new-article" class="row row-bottom-spaced" style="display:none;">
         <div class="col-md-12">
             <form method="POST" action="{{url_for('article_create', username=account.key.get().username_lower)}}">
-                <div class="form-group">
-                    <label for="title">Title</label>
-                    <input class="form-control" type="text" name="title">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input class="form-control" type="text" name="title">
+                        </div>
+                        <div class="form-group">
+                            <label for="body">Body</label>
+                            <textarea class="form-control" name="body"></textarea>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="body">Body</label>
-                    <textarea class="form-control" name="body"></textarea>
+                <div class="row">
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                    </div>
+                    <div class="col-md-8">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-block" onclick="$( '#div-new-article' ).toggle();">Cancel</button>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
             </form>
         </div>
     </div>
