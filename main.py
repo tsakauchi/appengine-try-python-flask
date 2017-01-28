@@ -30,13 +30,15 @@ def index():
 
 @app.route('/blog/signup')
 def account_signup():
-    return render_template("signup.html", title="Hello, world!")
+    account = _main._get_current_account(request)
+    return render_template("signup.html", title="Hello, world!", account=account)
 
 
 @app.route('/blog/login', methods=['GET','POST'])
 def account_login():
     if request.method == 'GET':
-        return render_template("login.html", title="Hello, world!")
+        account = _main._get_current_account(request)
+        return render_template("login.html", title="Hello, world!", account=account)
     else:
         username = request.form['username']
         password = request.form['password']
