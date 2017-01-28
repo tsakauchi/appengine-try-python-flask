@@ -62,6 +62,15 @@ def account_login():
 
 @app.route('/blog/create', methods=['POST'])
 def account_create():
+    username = request.form['username']
+    username_lower = username.lower()
+
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
+
+    if account:
+        return 'account with same username already exists'
+
     new_account = Account(
         username=request.form['username'],
         dispname=request.form['dispname'],
