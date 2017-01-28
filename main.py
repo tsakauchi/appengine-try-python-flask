@@ -93,11 +93,13 @@ def account_view(username):
     if not account:
         return 'invalid account'
 
+    cur_account = _main._get_current_account(request)
+
     q = Article.query(ancestor=account.key)
     q = q.order(-Article.date_time_created)
     articles = q.fetch()
 
-    return render_template("index.html", title="Hello, world!", account=account, articles=articles)
+    return render_template("index.html", title="Hello, world!", account=cur_account, articles=articles)
 
 
 @app.route('/blog/<username>/article/create', methods=['POST'])
