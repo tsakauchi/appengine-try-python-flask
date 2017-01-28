@@ -60,6 +60,18 @@ def account_login():
         return response
 
 
+@app.route('/blog/logout')
+def account_logout():
+    cur_account = _main._get_current_account(request)
+
+    response = make_response(redirect(url_for('index')))
+
+    if cur_account:
+        _main._logout(response)
+
+    return response
+
+
 @app.route('/blog/create', methods=['POST'])
 def account_create():
     username = request.form['username']

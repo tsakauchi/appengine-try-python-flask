@@ -6,6 +6,10 @@ body {
     font-weight: bold;
 }
 
+.header-account {
+    text-align: right;
+}
+
 .article-title {
     margin-top: 0px;
 }
