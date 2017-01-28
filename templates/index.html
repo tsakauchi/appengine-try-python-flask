@@ -21,49 +21,61 @@
     
     {% if account %}
     <div class="row row-bottom-spaced">
-        <button class="btn btn-block btn-primary" onclick="$( '#div-new-article' ).toggle();">Add new article</button>
+        <div class="col-md-12">
+            <button class="btn btn-block btn-primary" onclick="$( '#div-new-article' ).toggle();">Add new article</button>
+        </div>
     </div>
     
     <div id="div-new-article" class="row row-bottom-spaced" style="display:none;">
-        <form method="POST" action="{{url_for('article_create', username=account.key.get().username_lower)}}">
-            <div class="form-group">
-                <label for="title">Title</label>
-                <input class="form-control" type="text" name="title">
-            </div>
-            <div class="form-group">
-                <label for="body">Body</label>
-                <textarea class="form-control" name="body"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
+        <div class="col-md-12">
+            <form method="POST" action="{{url_for('article_create', username=account.key.get().username_lower)}}">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input class="form-control" type="text" name="title">
+                </div>
+                <div class="form-group">
+                    <label for="body">Body</label>
+                    <textarea class="form-control" name="body"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
     </div>
     {% endif %}
     
     {% for article in articles %}
-    <article id="article-{{article.key.id()}}" class="row row-bottom-spaced article-container">
-        <h1 class="article-title"><a href="{{url_for('article_view', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">{{article.title}}</a></h1>
-        <p>Posted: {{article.date_time_created}}</p>
-        <p>Last Updated: {{article.date_time_last_edited}}</p>
-        <p>{{article.body}}</p>
-        {% if account %}
-        {% if account.key.id() == article.key.parent().id() %}
-        <form method="POST" action="{{url_for('article_delete', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
-            <button type="submit" class="btn btn-primary">Delete</button>
-        </form>
-        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Edit</button>
-        {% endif %}
-        {% endif %}
+    <article id="article-{{article.key.id()}}" class="row row-bottom-spaced">
+        <div class="col-md-12">
+            <div class="article-container">
+                <h1 class="article-title"><a href="{{url_for('article_view', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">{{article.title}}</a></h1>
+                <p>Posted: {{article.date_time_created}}</p>
+                <p>Last Updated: {{article.date_time_last_edited}}</p>
+                <p>{{article.body}}</p>
+                {% if account %}
+                {% if account.key.id() == article.key.parent().id() %}
+                <form method="POST" action="{{url_for('article_delete', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                </form>
+                <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Edit</button>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
     </article>
     
     {% if account %}
     {% if account.key.id() == article.key.parent().id() %}
-    <div id="div-edit-article-{{article.key.id()}}" class="row row-bottom-spaced article-container" style="display:none;">
-        <form method="POST" action="{{url_for('article_edit', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
-            <p><input class="form-control" type="text" name="title" value="{{article.title}}"></input></p>
-            <p><textarea class="form-control" name="body">{{article.body}}</textarea></p>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-        <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Cancel</button>
+    <div id="div-edit-article-{{article.key.id()}}" class="row row-bottom-spaced" style="display:none;">
+        <div class="col-md-12">
+            <div class="article-container">
+                <form method="POST" action="{{url_for('article_edit', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
+                    <p><input class="form-control" type="text" name="title" value="{{article.title}}"></input></p>
+                    <p><textarea class="form-control" name="body">{{article.body}}</textarea></p>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+                <button class="btn btn-primary" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Cancel</button>
+            </div>
+        </div>
     </div>
     {% endif %}
     {% endif %}
