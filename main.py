@@ -20,7 +20,7 @@ uid = ""
 @app.route('/blog')
 def index():
     """Display all articles from all users"""
-    account = _main._get_current_account(request)
+    account = _main.get_current_account(request)
 
     q = Article.query()
     q = q.order(-Article.date_time_created)
@@ -31,16 +31,16 @@ def index():
 
 @app.route('/blog/signup')
 def account_signup():
-    account = _main._get_current_account(request)
-    next = _main._get_redirect_target(request)
+    account = _main.get_current_account(request)
+    next = _main.get_redirect_target(request)
     return render_template("signup.html", title="Hello, world!", account=account, next=next)
 
 
 @app.route('/blog/login', methods=['GET','POST'])
 def account_login():
     if request.method == 'GET':
-        account = _main._get_current_account(request)
-        next = _main._get_redirect_target(request)
+        account = _main.get_current_account(request)
+        next = _main.get_redirect_target(request)
         return render_template("login.html", title="Hello, world!", account=account, next=next)
     else:
         username = request.form['username']
@@ -57,26 +57,26 @@ def account_login():
             # invalid account name
             return render_template("login.html", title="Hello, world! (invalid act)")
 
-        if not _main._is_hashed_password_valid(username_lower, password, account.password):
+        if not _main.is_hashed_password_valid(username_lower, password, account.password):
             # invalid account password
             return render_template("login.html", title="Hello, world! (invalid pwd)")
 
-        response = make_response(_main._redirect_back(host_url, next_url, url_for('index')))
-        _main._login(response, account)
+        response = make_response(_main.redirect_back(host_url, next_url, url_for('index')))
+        _main.login(response, account)
         return response
 
 
 @app.route('/blog/logout')
 def account_logout():
-    cur_account = _main._get_current_account(request)
+    cur_account = _main.get_current_account(request)
 
     host_url = request.host_url
-    next_url = _main._get_redirect_target(request)
+    next_url = _main.get_redirect_target(request)
 
-    response = make_response(_main._redirect_back(host_url, next_url, url_for('index')))
+    response = make_response(_main.redirect_back(host_url, next_url, url_for('index')))
 
     if cur_account:
-        _main._logout(response)
+        _main.logout(response)
 
     return response
 
@@ -100,13 +100,13 @@ def account_create():
     new_account = Account(
         username=username,
         dispname=dispname,
-        password=_main._get_hashed_password(username_lower, password),
+        password=_main.get_hashed_password(username_lower, password),
         email=email
     )
     new_account.put()
 
-    response = make_response(_main._redirect_back(host_url, next_url, url_for('index')))
-    _main._login(response, new_account)
+    response = make_response(_main.redirect_back(host_url, next_url, url_for('index')))
+    _main.login(response, new_account)
     return response
 
 
@@ -120,7 +120,7 @@ def account_view(username):
     if not account:
         return 'invalid account'
 
-    cur_account = _main._get_current_account(request)
+    cur_account = _main.get_current_account(request)
 
     q = Article.query(ancestor=account.key)
     q = q.order(-Article.date_time_created)
@@ -138,7 +138,7 @@ def article_create(username):
     if not account:
         return 'invalid account'
 
-    cur_account = _main._get_current_account(request)
+    cur_account = _main.get_current_account(request)
 
     if account.key != cur_account.key:
         return 'You can only create a new article under your account'
@@ -154,7 +154,7 @@ def article_create(username):
         body=body)
     new_article.put()
 
-    return _main._redirect_back(host_url, next_url, url_for('index'))
+    return _main.redirect_back(host_url, next_url, url_for('index'))
 
 
 @app.route('/blog/<username>/article/<int:article_id>')
@@ -171,7 +171,7 @@ def article_view(username, article_id):
         return 'invalid key'
     article = article_key.get()
 
-    cur_account = _main._get_current_account(request)
+    cur_account = _main.get_current_account(request)
 
     return render_template("article.html", title="Hello, world!", account=cur_account, article=article)
 
@@ -189,7 +189,7 @@ def article_edit(username, article_id):
     if not article_key:
         return 'invalid key'
 
-    cur_account = _main._get_current_account(request)
+    cur_account = _main.get_current_account(request)
     if not cur_account:
         return 'not logged in'
 
@@ -207,7 +207,7 @@ def article_edit(username, article_id):
     host_url = request.host_url
     next_url = request.form['next']
 
-    return _main._redirect_back(host_url, next_url, url_for('index'))
+    return _main.redirect_back(host_url, next_url, url_for('index'))
 
 
 @app.route('/blog/<username>/article/<int:article_id>/delete', methods=['POST'])
@@ -223,7 +223,7 @@ def article_delete(username, article_id):
     if not article_key:
         return 'invalid key'
 
-    cur_account = _main._get_current_account(request)
+    cur_account = _main.get_current_account(request)
     if not cur_account:
         return 'not logged in'
 
@@ -238,7 +238,7 @@ def article_delete(username, article_id):
     host_url = request.host_url
     next_url = request.form['next']
 
-    return _main._redirect_back(host_url, next_url, url_for('index'))
+    return _main.redirect_back(host_url, next_url, url_for('index'))
 
 
 @app.route('/blog/<username>/article/<int:article_id>/like', methods=['POST'])
@@ -254,7 +254,7 @@ def article_like(username, article_id):
     if not article_key:
         return 'invalid key'
 
-    cur_account = _main._get_current_account(request)
+    cur_account = _main.get_current_account(request)
     if not cur_account:
         return 'not logged in'
 
@@ -276,7 +276,7 @@ def article_like(username, article_id):
     host_url = request.host_url
     next_url = request.form['next']
 
-    return _main._redirect_back(host_url, next_url, url_for('index'))
+    return _main.redirect_back(host_url, next_url, url_for('index'))
 
 
 @app.route('/hello')
