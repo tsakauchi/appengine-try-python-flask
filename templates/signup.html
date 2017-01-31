@@ -59,8 +59,9 @@
                     </div>
                 </div>
                 <div class="panel-footer">
+                    <input type="hidden" name="next" value="{{next or ''}}">
                     <button type="submit" class="btn btn-primary">Submit</button>
-                    <a class="btn btn-default" href="{{url_for('index')}}">Cancel</a>
+                    <a class="btn btn-default" href="{{next or ''}}">Cancel</a>
                 </div>
             </form>
         </div>

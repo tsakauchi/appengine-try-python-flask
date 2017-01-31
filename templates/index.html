@@ -43,6 +43,7 @@
                 </div>
                 <div class="row">
                     <div class="col-md-2">
+                        <input type="hidden" name="next" value="{{request.path}}">
                         <button type="submit" class="btn btn-primary btn-block">Submit</button>
                     </div>
                     <div class="col-md-8">
@@ -78,12 +79,14 @@
                     </div>
                     <div class="col-md-2">
                         <form method="POST" action="{{url_for('article_delete', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
+                            <input type="hidden" name="next" value="{{request.path}}">
                             <button type="submit" class="btn btn-block">Delete</button>
                         </form>
                     </div>
                     {% else %}
                     <div class="col-md-2">
                         <form method="POST" action="{{url_for('article_like', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
+                            <input type="hidden" name="next" value="{{request.path}}">
                             <button type="submit" class="btn {% if article.is_account_liked_article(account) %}btn-danger{% else %}btn-primary{% endif %} btn-block">{% if article.is_account_liked_article(account) %}Unlike{% else %}Like{% endif %}</button>
                         </form>
                     </div>
@@ -110,6 +113,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-2">
+                            <input type="hidden" name="next" value="{{request.path}}">
                             <button type="submit" class="btn btn-primary btn-block">Submit</button>
                         </div>
                         <div class="col-md-8">

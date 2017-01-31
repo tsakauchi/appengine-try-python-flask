@@ -6,6 +6,7 @@ from google.appengine.ext import ndb
 
 from models import Account, Article, Like
 
+import logging
 import _main
 
 app = Flask(__name__)
@@ -31,19 +32,22 @@ def index():
 @app.route('/blog/signup')
 def account_signup():
     account = _main._get_current_account(request)
-    return render_template("signup.html", title="Hello, world!", account=account)
+    next = _main._get_redirect_target(request)
+    return render_template("signup.html", title="Hello, world!", account=account, next=next)
 
 
 @app.route('/blog/login', methods=['GET','POST'])
 def account_login():
     if request.method == 'GET':
         account = _main._get_current_account(request)
-        return render_template("login.html", title="Hello, world!", account=account)
+        next = _main._get_redirect_target(request)
+        return render_template("login.html", title="Hello, world!", account=account, next=next)
     else:
         username = request.form['username']
-        password = request.form['password']
-
         username_lower = username.lower()
+        password = request.form['password']
+        next_url = request.form['next']
+        host_url = request.host_url
 
         q = Account.query()
         q = q.filter(Account.username_lower==username_lower)
@@ -57,7 +61,7 @@ def account_login():
             # invalid account password
             return render_template("login.html", title="Hello, world! (invalid pwd)")
 
-        response = make_response(redirect(url_for('index')))
+        response = make_response(_main._redirect_back(host_url, next_url, url_for('index')))
         _main._login(response, account)
         return response
 
@@ -66,7 +70,10 @@ def account_login():
 def account_logout():
     cur_account = _main._get_current_account(request)
 
-    response = make_response(redirect(url_for('index')))
+    host_url = request.host_url
+    next_url = _main._get_redirect_target(request)
+
+    response = make_response(_main._redirect_back(host_url, next_url, url_for('index')))
 
     if cur_account:
         _main._logout(response)
@@ -78,6 +85,11 @@ def account_logout():
 def account_create():
     username = request.form['username']
     username_lower = username.lower()
+    dispname = request.form['dispname']
+    password = request.form['password']
+    email = request.form['email']
+    next_url = request.form['next']
+    host_url = request.host_url
 
     q = Account.query(Account.username_lower==username_lower)
     account = q.get()
@@ -86,13 +98,14 @@ def account_create():
         return 'account with same username already exists'
 
     new_account = Account(
-        username=request.form['username'],
-        dispname=request.form['dispname'],
-        password=_main._get_hashed_password(request.form['username'].lower(), request.form['password']),
-        email=request.form['email']
+        username=username,
+        dispname=dispname,
+        password=_main._get_hashed_password(username_lower, password),
+        email=email
     )
     new_account.put()
-    response = make_response(redirect(url_for('index')))
+
+    response = make_response(_main._redirect_back(host_url, next_url, url_for('index')))
     _main._login(response, new_account)
     return response
 
@@ -130,14 +143,18 @@ def article_create(username):
     if account.key != cur_account.key:
         return 'You can only create a new article under your account'
 
+    title = request.form['title']
+    body = request.form['body']
+    next_url = request.form['next']
+    host_url = request.host_url
+
     new_article = Article(
         parent=account.key,
-        title=request.form['title'],
-        body=request.form['body'])
+        title=title,
+        body=body)
     new_article.put()
 
-    #return redirect(url_for('index'))
-    return redirect(url_for('account_view', username=username_lower))
+    return _main._redirect_back(host_url, next_url, url_for('index'))
 
 
 @app.route('/blog/<username>/article/<int:article_id>')
@@ -187,8 +204,10 @@ def article_edit(username, article_id):
     article.date_time_last_edited = datetime.now()
     article.put()
 
-    #return redirect(url_for('index'))
-    return redirect(url_for('account_view', username=username_lower))
+    host_url = request.host_url
+    next_url = request.form['next']
+
+    return _main._redirect_back(host_url, next_url, url_for('index'))
 
 
 @app.route('/blog/<username>/article/<int:article_id>/delete', methods=['POST'])
@@ -216,8 +235,10 @@ def article_delete(username, article_id):
     if article_key:
         article_key.delete()
 
-    #return redirect(url_for('index'))
-    return redirect(url_for('account_view', username=username_lower))
+    host_url = request.host_url
+    next_url = request.form['next']
+
+    return _main._redirect_back(host_url, next_url, url_for('index'))
 
 
 @app.route('/blog/<username>/article/<int:article_id>/like', methods=['POST'])
@@ -252,7 +273,10 @@ def article_like(username, article_id):
             account_key=cur_account.key)
         new_like.put()
 
-    return redirect(url_for('account_view', username=username_lower))
+    host_url = request.host_url
+    next_url = request.form['next']
+
+    return _main._redirect_back(host_url, next_url, url_for('index'))
 
 
 @app.route('/hello')

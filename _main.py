@@ -1,6 +1,7 @@
 from datetime import datetime
+from urlparse import urlparse, urljoin
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import render_template, redirect, url_for
 
 from google.appengine.ext import ndb
 
@@ -64,3 +65,29 @@ def _login(response,account):
 def _logout(response):
     response.set_cookie("account_id","")
 
+# adapted from Securely Redirect Back by Armin Ronacher
+# http://flask.pocoo.org/snippets/62/
+def _is_safe_url(host_url,target_url):
+    ref_url = urlparse(host_url)
+    tst_url = urlparse(urljoin(host_url,target_url))
+    is_http = tst_url.scheme in ('http','https')
+    is_host_same = ref_url.netloc == tst_url.netloc
+    return is_http and is_host_same
+
+def _get_redirect_target(request):
+    for next_url in request.values.get('next'), request.referrer:
+        if not next_url:
+            continue
+        if _is_safe_url(request.host_url, next_url):
+            return next_url
+
+# Inputs will typically come from...
+# host_url = request.host_url
+# target_url = request.form['next']
+# default_url = url_for('somedefaulturl',param1,param2...)
+def _redirect_back(host_url, next_url, default_url):
+    if next_url and _is_safe_url(host_url, next_url):
+        redirect_url = next_url
+    else:
+        redirect_url = default_url
+    return redirect(redirect_url)
