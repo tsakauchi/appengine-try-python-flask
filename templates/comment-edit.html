@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <header>
+        <div class="row">
+            <div class="col-md-12">
+                <h1 class="header-title">{{title}}</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-6">
+                <p>{% if account %}Logged in as {{account.name}}{% else %}Welcome, guest{% endif %}</p>
+            </div>
+            <div class="col-xs-6 header-account">
+                <p>{% if account %}<a href="{{url_for('account_logout')}}">Logout</a>{% else %}<a href="{{url_for('account_signup')}}">Signup</a>|<a href="{{url_for('account_login')}}">Login</a>{% endif %}</p>
+            </div>
+        </div>
+    </header>
+    
+    <hr>
+    
+    {% if account %}
+    <div class="row">
+        <div class="col-md-12">
+            <form class="panel panel-default" method="POST" action="{{url_for('comment_edit', username=comment.key.parent().get().key.parent().get().username_lower, article_id=comment.key.parent().get().key.id(), comment_number=comment.comment_number)}}">
+                <div class="panel-heading header-title">
+                    Edit comment
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input class="form-control" type="text" name="title" value="{{comment.title}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="title">Comment</label>
+                        <textarea class="form-control" name="body">{{comment.body}}</textarea>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <input type="hidden" name="next" value="{{next or ''}}">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <a class="btn btn-default" href="{{next or ''}}">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-md-12">
+            <p>
+                You must be <a href="{{url_for('account_login')}}">logged in</a> to edit comment.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

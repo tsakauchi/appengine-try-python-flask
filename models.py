@@ -75,7 +75,42 @@ class Article(NdbModelBase):
             return self._get_elapsed_time_summary(self.date_time_last_edited)
         return None
 
+    @property
+    def comments(self):
+        q = Comment.query(ancestor=self.key)
+        comments = q.fetch()
+        return comments
+
 
 class Like(ndb.Model):
     """Like entity - represents like votes. parent is Article entity"""
     account_key = ndb.KeyProperty(required=True, kind=Account)
+
+
+class Comment(NdbModelBase):
+    """Comment entity - represents a comment for an article. parent is Article entity"""
+    comment_number = ndb.IntegerProperty(required=True)
+    title = ndb.StringProperty()
+    body = ndb.StringProperty()
+    date_time_created = ndb.DateTimeProperty(auto_now_add=True)
+    date_time_last_edited = ndb.DateTimeProperty(auto_now=True)
+    account_key = ndb.KeyProperty(required=True, kind=Account)
+
+    def is_comment_posted_by_account(self, account):
+        if self.account_key == account.key:
+            return True
+        else:
+            return False
+
+    @property
+    def delta_created(self):
+        return self._get_elapsed_time_summary(self.date_time_created)
+
+    @property
+    def delta_last_edited(self):
+        created_vs_edited = self.date_time_created - self.date_time_last_edited
+        if created_vs_edited.seconds > 1:
+            return self._get_elapsed_time_summary(self.date_time_last_edited)
+        return None
+
+

@@ -37,3 +37,9 @@ indexes:
   properties:
   - name: date_time_last_edited
     direction: desc
+
+- kind: Comment
+  ancestor: yes
+  properties:
+  - name: comment_number
+    direction: desc

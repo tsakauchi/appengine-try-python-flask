@@ -2,6 +2,15 @@ body {
     font-family: 'Noto Sans', sans-serif;
 }
 
+.comment-title {
+    font-weight: bold;
+}
+
+.comment-header {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
 .header-title {
     font-weight: bold;
 }

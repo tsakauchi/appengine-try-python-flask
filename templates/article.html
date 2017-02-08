@@ -49,6 +49,59 @@
                     </div>
                     {% endif %}
                     {% endif %}
+                    <div class="col-md-2">
+                        <button class="btn btn-block btn-primary" onclick="$( '#article-{{article.key.id()}}-comments' ).toggle();">Comments ({{article.comments|length}})</button>
+                    </div>
+                </div>
+                <div id="article-{{article.key.id()}}-comments" class="row" style="display:none;">
+                    <div class="col-md-12">
+                        <h1 class="comment-header">Comments</h1>
+                        {% if account %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                <form method="POST" action="{{url_for('comment_create', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <p><input class="form-control" type="text" name="title"></input></p>
+                                            <p><textarea class="form-control" name="body"></textarea></p>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            <input type="hidden" name="next" value="{{request.path}}">
+                                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                                        </div>
+                                        <div class="col-md-8">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-block">Cancel</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% for comment in article.comments %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p class="comment-title">#{{comment.comment_number}} {{comment.title}}</p>
+                                <p>Posted by <span class="article-author">{{comment.account_key.get().dispname}}</span> on {{comment.date_time_created.strftime('%a, %b %d, %Y %I:%M:%S %p')}} ({{comment.delta_created}} ago{% if comment.delta_last_edited %}, updated {{comment.delta_last_edited}} ago{% endif %})</p>
+                                <p>{{comment.body}}</p>
+                            </div>
+                        </div>
+                        {% if account %}
+                        {% if account.key.id() == comment.account_key.id() %}
+                        <div class="row">
+                            <form id="form-delete-comment-{{article.key.parent().get().username_lower}}-{{article.key.id()}}-{{comment.comment_number}}" class="col-md-12" method="POST" action="{{url_for('comment_delete', username=article.key.parent().get().username_lower, article_id=article.key.id(), comment_number=comment.comment_number)}}">
+                                <input type="hidden" name="next" value="{{request.path}}">
+                                [<a href="{{url_for('comment_edit', username=article.key.parent().get().username_lower, article_id=article.key.id(), comment_number=comment.comment_number)}}">Edit</a>]
+                                [<a href="#" onclick="document.getElementById('form-delete-comment-{{article.key.parent().get().username_lower}}-{{article.key.id()}}-{{comment.comment_number}}').submit();">Delete</a>]
+                            </form>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>

@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, make_respo
 
 from google.appengine.ext import ndb
 
-from models import Account, Article, Like
+from models import Account, Article, Like, Comment
 
 import logging
 import _main
@@ -272,6 +272,125 @@ def article_like(username, article_id):
             parent=article_key,
             account_key=cur_account.key)
         new_like.put()
+
+    host_url = request.host_url
+    next_url = request.form['next']
+
+    return _main.redirect_back(host_url, next_url, url_for('index'))
+
+
+@app.route('/blog/<username>/article/<int:article_id>/comment/create', methods=['POST'])
+def comment_create(username, article_id):
+    username_lower = username.lower()
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
+
+    if not account:
+        return 'invalid account'
+
+    article_key = ndb.Key(Account, account.key.id(), Article, article_id)
+    if not article_key:
+        return 'invalid key'
+
+    cur_account = _main.get_current_account(request)
+    if not cur_account:
+        return 'not logged in'
+
+    q = Comment.query(ancestor=article_key)
+    q = q.order(-Comment.comment_number)
+    last_comment = q.get()
+
+    if last_comment:
+        last_comment_number = last_comment.comment_number
+    else:
+        last_comment_number = 0
+
+    title = request.form['title']
+    body = request.form['body']
+    next_url = request.form['next']
+    host_url = request.host_url
+
+    new_comment = Comment(
+        parent=article_key,
+        comment_number=last_comment_number+1,
+        title=title,
+        body=body,
+        account_key=cur_account.key)
+    new_comment.put()
+
+    return _main.redirect_back(host_url, next_url, url_for('index'))
+
+
+@app.route('/blog/<username>/article/<int:article_id>/comment/<int:comment_number>/edit', methods=['GET','POST'])
+def comment_edit(username, article_id, comment_number):
+    username_lower = username.lower()
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
+
+    if not account:
+        return 'invalid account'
+
+    article_key = ndb.Key(Account, account.key.id(), Article, article_id)
+    if not article_key:
+        return 'invalid key'
+
+    cur_account = _main.get_current_account(request)
+    if not cur_account:
+        return 'not logged in'
+
+    q = Comment.query(ancestor=article_key)
+    q = q.filter(Comment.comment_number==comment_number)
+    comment = q.get()
+
+    if not comment:
+        return 'invalid comment number'
+
+    if comment.account_key != cur_account.key:
+        return "cannot edit another person's comment"
+
+    if request.method == 'GET':
+        next_url = _main.get_redirect_target(request)
+        return render_template("comment-edit.html", title="Hello, world!", account=cur_account, comment=comment, next=next_url)
+
+    else:
+        comment.title = request.form['title']
+        comment.body = request.form['body']
+        comment.put()
+
+        host_url = request.host_url
+        next_url = request.form['next']
+
+        return _main.redirect_back(host_url, next_url, url_for('index'))
+
+
+@app.route('/blog/<username>/article/<int:article_id>/comment/<int:comment_number>/delete', methods=['POST'])
+def comment_delete(username, article_id, comment_number):
+    username_lower = username.lower()
+    q = Account.query(Account.username_lower==username_lower)
+    account = q.get()
+
+    if not account:
+        return 'invalid account'
+
+    article_key = ndb.Key(Account, account.key.id(), Article, article_id)
+    if not article_key:
+        return 'invalid key'
+
+    cur_account = _main.get_current_account(request)
+    if not cur_account:
+        return 'not logged in'
+
+    q = Comment.query(ancestor=article_key)
+    q = q.filter(Comment.comment_number==comment_number)
+    comment = q.get()
+
+    if not comment:
+        return 'invalid comment number'
+
+    if comment.account_key != cur_account.key:
+        return "cannot delete another person's comment"
+
+    comment.key.delete()
 
     host_url = request.host_url
     next_url = request.form['next']
