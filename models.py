@@ -1,4 +1,28 @@
+from datetime import datetime
 from google.appengine.ext import ndb
+
+
+class NdbModelBase(ndb.Model):
+
+    # adapted from response to "efficient human readable timedelta"
+    # http://codereview.stackexchange.com/a/37286
+    def _get_elapsed_time_summary(self, datetimeToGetElapsedTimeFrom):
+        elapsedTime = datetime.now() - datetimeToGetElapsedTimeFrom
+
+        days, rem = divmod(elapsedTime.seconds, 86400)
+        hours, rem = divmod(rem, 3600)
+        minutes, seconds = divmod(rem, 60)
+        if seconds < 1:
+            seconds = 1
+        locals_ = locals()
+        magnitudes_str = ("{n} {magnitude}".format(n=int(locals_[magnitude]), magnitude=magnitude)
+                          for magnitude in ("days", "hours", "minutes", "seconds") if locals_[magnitude])
+
+        #delta_str = ", ".join(magnitudes_str)
+        #return delta_str
+
+        # I just want the most significant magnitude to be shown
+        return list(magnitudes_str)[0]
 
 
 class Account(ndb.Model):
@@ -18,7 +42,7 @@ class Account(ndb.Model):
         return self.username
 
 
-class Article(ndb.Model):
+class Article(NdbModelBase):
     """Article entity - represents blog article"""
     title = ndb.StringProperty(required=True)
     body = ndb.StringProperty()
@@ -39,6 +63,17 @@ class Article(ndb.Model):
             return True
         else:
             return False
+
+    @property
+    def delta_created(self):
+        return self._get_elapsed_time_summary(self.date_time_created)
+
+    @property
+    def delta_last_edited(self):
+        created_vs_edited = self.date_time_created - self.date_time_last_edited
+        if created_vs_edited.seconds > 1:
+            return self._get_elapsed_time_summary(self.date_time_last_edited)
+        return None
 
 
 class Like(ndb.Model):
