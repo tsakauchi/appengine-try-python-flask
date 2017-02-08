@@ -67,13 +67,11 @@
                         <p>{{article.body}}</p>
                     </div>
                 </div>
-                {% if account %}
                 <div class="row">
+                    {% if account %}
                     {% if account.key.id() == article.key.parent().id() %}
                     <div class="col-md-2">
                         <button type="button" class="btn btn-primary btn-block" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Edit</button>
-                    </div>
-                    <div class="col-md-8">
                     </div>
                     <div class="col-md-2">
                         <form method="POST" action="{{url_for('article_delete', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
@@ -88,11 +86,9 @@
                             <button type="submit" class="btn {% if article.is_account_liked_article(account) %}btn-danger{% else %}btn-primary{% endif %} btn-block">{% if article.is_account_liked_article(account) %}Unlike{% else %}Like{% endif %}</button>
                         </form>
                     </div>
-                    <div class="col-md-10">
-                    </div>
+                    {% endif %}
                     {% endif %}
                 </div>
-                {% endif %}
             </div>
         </div>
     </article>
