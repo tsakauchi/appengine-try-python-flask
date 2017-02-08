@@ -24,16 +24,15 @@
                     <div class="col-md-12">
                         <h1 class="article-title"><a href="{{url_for('article_view', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">{{article.title}}</a></h1>
                         <p>Posted by <span class="article-author">{{article.key.parent().get().dispname}}</span> on {{article.date_time_created.strftime('%a, %b %d, %Y %I:%M:%S %p')}} ({{article.delta_created}} ago{% if article.delta_last_edited %}, updated {{article.delta_last_edited}} ago{% endif %})</p>
+                        <p>{{article.like_count}} likes</p>
                         <p>{{article.body}}</p>
                     </div>
                 </div>
-                {% if account %}
-                {% if account.key.id() == article.key.parent().id() %}
                 <div class="row">
+                    {% if account %}
+                    {% if account.key.id() == article.key.parent().id() %}
                     <div class="col-md-2">
                         <button type="button" class="btn btn-primary btn-block" onclick="$( '#div-edit-article-{{article.key.id()}}' ).toggle(); $( '#article-{{article.key.id()}}' ).toggle();">Edit</button>
-                    </div>
-                    <div class="col-md-8">
                     </div>
                     <div class="col-md-2">
                         <form method="POST" action="{{url_for('article_delete', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
@@ -41,9 +40,16 @@
                             <button type="submit" class="btn btn-block">Delete</button>
                         </form>
                     </div>
+                    {% else %}
+                    <div class="col-md-2">
+                        <form method="POST" action="{{url_for('article_like', username=article.key.parent().get().username_lower, article_id=article.key.id())}}">
+                            <input type="hidden" name="next" value="{{request.path}}">
+                            <button type="submit" class="btn {% if article.is_account_liked_article(account) %}btn-danger{% else %}btn-primary{% endif %} btn-block">{% if article.is_account_liked_article(account) %}Unlike{% else %}Like{% endif %}</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    {% endif %}
                 </div>
-                {% endif %}
-                {% endif %}
             </div>
         </div>
     </article>
