@@ -6,6 +6,7 @@ from google.appengine.ext import ndb
 
 from models import Account, Article, Like, Comment
 
+import re
 import logging
 import _main
 
@@ -83,19 +84,70 @@ def account_logout():
 
 @app.route('/blog/create', methods=['POST'])
 def account_create():
-    username = request.form['username']
+    username = request.form['username'].strip()
     username_lower = username.lower()
-    dispname = request.form['dispname']
+    dispname = request.form['dispname'].strip()
     password = request.form['password']
-    email = request.form['email']
-    next_url = request.form['next']
-    host_url = request.host_url
+    email = request.form['email'].strip().lower()
+    next_url = request.form['next'].strip()
+    host_url = request.host_url.strip()
+
+    # Since username is used as a part of the URL to access user-specific pages and calls,
+    # username must be usable as a URL path.
+    # Allow characters specified in RFC3986.
+    # However, place additional restrictions pursuant to most of Google Name and Password Guidelines
+    # for better compatibility with using usernames as a part of URL paths.
+    # Google Name and Password Guidelines
+    # Usernames can contain letters (a-z), numbers (0-9), dashes (-), underscores (_), apostrophes ('), and periods (.).
+    # Usernames can't contain more than one period (.) in a row.
+    # Usernames can begin or end with non-alphanumeric characters except periods (.), with a maximum of 64 characters.
+    # Passwords can contain any combination of ASCII characters and must contain a minimum of 8 characters.
+    if not username:
+        return 'invalid user name. user must be specified.'
+
+    if len(username) > 64:
+        return 'invalid user name. user name can be at most 64 characters long.'
+
+    if not re.search("^[a-zA-Z0-9\-\_\'\.]+$", username):
+        return 'invalid user name. user name may contain letters (a-z), numbers (0-9), dashes (-), underscores (_), apostrophes (\'), or periods (.).'
+
+    if re.search("^\.", username) or re.match("\.$", username):
+        return 'invalid user name. user name cannot start or end with a period (.).'
+
+    if re.search("\.{2,}", username):
+        return 'invalid user name. user name cannot contain more than one period (.) in a row.'
+
+    if not password:
+        return 'invalid password. password must be specified.'
+
+    if len(password) < 8:
+        return 'invalid password. password must be at least 8 characters long.'
+
+    # I will NOT impose any complexity requirements for password.
+
+    # loose verification due to e-mail addresses supporting UTF-8 per RFC6530-6533
+    # although verification via confirmation e-mail is not implemented in this system, we can only validate that
+    # [1] e-mail address is valid and [2] e-mail address belongs to the person registering by sending
+    # a confirmation e-mail to the said address and request the user to click on the
+    # verification link.
+    # NOTE: technically allowed, but dotless e-mail addresses are strongly discouraged by ICANN
+    # per https://www.icann.org/news/announcement-2013-08-30-en
+    if not re.search('[^\s@]+@[^\s@]+\.[^\s@]+', email):
+        return 'invalid email address. address must include ONE at (@) symbol and AT LEAST ONE dot (.)'
 
     q = Account.query(Account.username_lower==username_lower)
     account = q.get()
 
+    # username must be unique
     if account:
         return 'account with same username already exists'
+
+    q = Account.query(Account.email==email)
+    account = q.get()
+
+    # email must be unique
+    if account:
+        return 'account with same email address already exists'
 
     new_account = Account(
         username=username,
